@@ -25,13 +25,15 @@ from nonebot.adapters.onebot.v11 import (
 
 
 from nonebot.plugin import PluginMetadata
+from .config import Config
 __plugin_meta__ = PluginMetadata(
     name="群文件管理",
     description="基于Lagrange.OneBot & NoneBot2的群文件管理插件",
     usage="清理群文件：清理群文件\n备份群文件：备份群文件\n恢复群文件：恢复群文件\n文件整理：文件整理",
     type="application",
     homepage="https://github.com/zhongwen-4/nonebot-plugin-group-file-admin",
-    supported_adapters={"~onebot.v11"}
+    supported_adapters={"~onebot.v11"},
+    config= Config
 )
 
 
