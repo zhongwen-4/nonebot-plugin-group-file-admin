@@ -251,7 +251,7 @@ async def del_local_file_handle(event: GroupMessageEvent):
 
 @file_arrange.handle()
 async def file_arrange_handle(bot: Bot, event: GroupMessageEvent):
-    import re, time
+    import re, time, asyncio
     from collections import OrderedDict
     from nonebot.adapters.onebot.v11.exception import ActionFailed
 
@@ -263,30 +263,36 @@ async def file_arrange_handle(bot: Bot, event: GroupMessageEvent):
     file_expand = [re.findall(r"\.[^\.]+$", i.file_name)[0] for i in data.files]
     file_expand = list(OrderedDict.fromkeys(file_expand))
 
-    for expand in file_expand:
-        try:
-            logger.info(f"创建文件夹：{expand[1:]}")
-            await bot.call_api(
-                "create_group_file_folder", group_id= event.group_id, name= expand[1:]
-            )
-            logger.info(f"文件夹 {expand[1:]} 创建完成")
-        except ActionFailed:
-            logger.info(f"文件夹 {expand[1:]} 已存在，跳过创建文件夹")
-            continue
+    async def create_folder():
+        for expand in file_expand:
+            try:
+                logger.info(f"创建文件夹：{expand[1:]}")
+                await bot.call_api(
+                    "create_group_file_folder", group_id= event.group_id, name= expand[1:]
+                )
+                logger.info(f"文件夹 {expand[1:]} 创建完成")
+            except ActionFailed:
+                logger.info(f"文件夹 {expand[1:]} 已存在，跳过创建文件夹")
+                continue
+    
+    asyncio.create_task(create_folder())
 
-    for files in data.files:
-        file_names = re.findall(r'(\S+)\.(\w+)', files.file_name)
-        logger.info(f"获取文件名：{files.file_name}")
-        for expand_name in file_names:
-            folder = await file.get_root_data(bot)
-            for folder_name in folder.folders:
-                if folder_name.folder_name == expand_name[1]:
-                    logger.info(f"匹配文件夹完成: {files.file_name} -> {folder_name.folder_name}")
-                    logger.debug(f"文件夹ID：{folder_name.folder_id} | 文件ID：{files.file_id}")
-                    await bot.call_api(
-                        "move_group_file", group_id= event.group_id, file_id= files.file_id, target_directory= folder_name.folder_id
-                    )
-                    logger.info(f"移动文件完成: {files.file_name} -> {folder_name.folder_name}")
+    async def move_file():
+        for files in data.files:
+            file_names = re.findall(r'(\S+)\.(\w+)', files.file_name)
+            logger.info(f"获取文件名：{files.file_name}")
+            for expand_name in file_names:
+                folder = await file.get_root_data(bot)
+                for folder_name in folder.folders:
+                    if folder_name.folder_name == expand_name[1]:
+                        logger.info(f"匹配文件夹完成: {files.file_name} -> {folder_name.folder_name}")
+                        logger.debug(f"文件夹ID：{folder_name.folder_id} | 文件ID：{files.file_id}")
+                        await bot.call_api(
+                            "move_group_file", group_id= event.group_id, file_id= files.file_id, target_directory= folder_name.folder_id
+                        )
+                        logger.info(f"移动文件完成: {files.file_name} -> {folder_name.folder_name}")
+
+    asyncio.create_task(move_file())
     
     logger.info(f"整理完成，耗时：{time.time() - t}s")
     await file_arrange.finish("整理完成！")
