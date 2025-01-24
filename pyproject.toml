@@ -5,6 +5,7 @@ description = "Default template for PDM package"
 authors = [
     {name = "zhongwen-4", email = "2401128923@qq.com"},
 ]
+
 dependencies = [
     "nonebot-plugin-localstore>=0.7.3",
     "nonebot-plugin-waiter>=0.8.1",
