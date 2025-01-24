@@ -1,5 +1,5 @@
 [project]
-name = "group-file-admin"
+name = "nonebot-plugin-group-file-admin"
 version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
